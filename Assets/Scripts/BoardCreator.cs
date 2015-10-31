@@ -6,7 +6,7 @@ public class BoardCreator : MonoBehaviour
     // The type of tile that will be laid in a specific position.
     public enum TileType
     {
-        Wall, Floor,
+        Void, Wall, Floor
     }
 
 
@@ -48,6 +48,8 @@ public class BoardCreator : MonoBehaviour
         CreateRoomsAndCorridors();
 
         SetTilesValuesForRooms();
+
+
         SetTilesValuesForCorridors();
 
         InstantiateTiles();
@@ -131,8 +133,6 @@ public class BoardCreator : MonoBehaviour
                 for (int k = 0; k < currentRoom.roomHeight; k++)
                 {
                     int yCoord = currentRoom.yPos + k;
-
-                    // The coordinates in the jagged array are based on the room's position and it's width and height.
                     tiles[xCoord][yCoord] = TileType.Floor;
                 }
             }
@@ -146,6 +146,7 @@ public class BoardCreator : MonoBehaviour
         for (int i = 0; i < corridors.Length; i++)
         {
             Corridor currentCorridor = corridors[i];
+
 
             // and go through it's length.
             for (int j = 0; j < currentCorridor.corridorLength; j++)
@@ -181,24 +182,41 @@ public class BoardCreator : MonoBehaviour
 
     void InstantiateTiles()
     {
+        bool wasPreviousAFloor = false;
+
         // Go through all the tiles in the jagged array...
         for (int i = 0; i < tiles.Length; i++)
         {
             for (int j = 0; j < tiles[i].Length; j++)
             {
                 // ... and instantiate a floor tile for it.
-                InstantiateFromArray(floorTiles, i, j);
-
-                // If the tile type is Wall...
-                if (tiles[i][j] == TileType.Wall)
+                if (tiles[i][j] == TileType.Floor)
                 {
-                    // ... instantiate a wall over the top.
-                    InstantiateFromArray(wallTiles, i, j);
+                    InstantiateFromArray(floorTiles, i, j);
+                    checkForWallsAround(i,j);
+                }
+                else
+                {
+                    wasPreviousAFloor = false;
                 }
             }
         }
     }
 
+    void checkForWallsAround(int i, int j) {
+        if (tiles[i-1][j] == TileType.Void)
+        {
+            InstantiateFromArray(floorTiles, i-1, j);
+        }
+        if (tiles[i - 1][j - 1] == TileType.Void)
+        {
+            InstantiateFromArray(floorTiles, i - 1, j-1);
+        }
+        if (tiles[i][j-1] == TileType.Void)
+        {
+            InstantiateFromArray(floorTiles, i, j - 1);
+        }
+    }
 
     void InstantiateOuterWalls()
     {
