@@ -29,6 +29,17 @@ public class BoardCreator : MonoBehaviour
 
     private void Start()
     {
+
+    }
+
+    public void SetUpLevel()
+    {
+        
+        if(boardHolder != null)
+        {
+            //if the board holder already exists delete it and make a new one.
+            Destroy(boardHolder);
+        }
         // Create the board holder.
         boardHolder = new GameObject("BoardHolder");
 
