@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 public class BoardCreator : MonoBehaviour
@@ -204,17 +205,43 @@ public class BoardCreator : MonoBehaviour
     }
 
     void checkForWallsAround(int i, int j) {
-        if (tiles[i-1][j] == TileType.Void)
-        {
-            InstantiateFromArray(floorTiles, i-1, j);
+        try {
+            if (tiles[i - 1][j] == TileType.Void)
+            {
+                InstantiateFromArray(wallTiles, i - 1, j);
+            }
+            if (tiles[i - 1][j - 1] == TileType.Void)
+            {
+                InstantiateFromArray(wallTiles, i - 1, j - 1);
+            }
+            if (tiles[i][j - 1] == TileType.Void)
+            {
+                InstantiateFromArray(wallTiles, i, j - 1);
+            }
+            if (tiles[i + 1][j] == TileType.Void)
+            {
+                InstantiateFromArray(wallTiles, i + 1, j);
+            }
+            if (tiles[i + 1][j + 1] == TileType.Void)
+            {
+                InstantiateFromArray(wallTiles, i + 1, j + 1);
+            }
+            if (tiles[i][j + 1] == TileType.Void)
+            {
+                InstantiateFromArray(wallTiles, i, j + 1);
+            }
+            if (tiles[i - 1][j + 1] == TileType.Void)
+            {
+                InstantiateFromArray(wallTiles, i - 1, j + 1);
+            }
+            if (tiles[i + 1][j - 1] == TileType.Void)
+            {
+                InstantiateFromArray(wallTiles, i + 1, j - 1);
+            }
         }
-        if (tiles[i - 1][j - 1] == TileType.Void)
+        catch(IndexOutOfRangeException)
         {
-            InstantiateFromArray(floorTiles, i - 1, j-1);
-        }
-        if (tiles[i][j-1] == TileType.Void)
-        {
-            InstantiateFromArray(floorTiles, i, j - 1);
+            // is okay just do nothing.
         }
     }
 
@@ -271,7 +298,7 @@ public class BoardCreator : MonoBehaviour
     void InstantiateFromArray(GameObject[] prefabs, float xCoord, float yCoord)
     {
         // Create a random index for the array.
-        int randomIndex = Random.Range(0, prefabs.Length);
+        int randomIndex = UnityEngine.Random.Range(0, prefabs.Length);
 
         // The position to be instantiated at is based on the coordinates.
         Vector3 position = new Vector3(xCoord, yCoord, 0f);
