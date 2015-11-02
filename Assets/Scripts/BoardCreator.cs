@@ -54,20 +54,21 @@ public class BoardCreator : MonoBehaviour
         SetTilesValuesForCorridors();
 
         InstantiateTiles();
-        InstantiateOuterWalls();
+        //InstantiateOuterWalls();
     }
 
 
     void SetupTilesArray()
     {
         // Set the tiles jagged array to the correct width.
-        tiles = new TileType[columns][];
+        //Add space to create walls in.
+        tiles = new TileType[columns + 4][];
 
         // Go through all the tile arrays...
         for (int i = 0; i < tiles.Length; i++)
         {
             // ... and set each tile array is the correct height.
-            tiles[i] = new TileType[rows];
+            tiles[i] = new TileType[rows + 4];
         }
     }
 
@@ -134,7 +135,7 @@ public class BoardCreator : MonoBehaviour
                 for (int k = 0; k < currentRoom.roomHeight; k++)
                 {
                     int yCoord = currentRoom.yPos + k;
-                    tiles[xCoord][yCoord] = TileType.Floor;
+                    tiles[xCoord + 2][yCoord + 2] = TileType.Floor;
                 }
             }
         }
@@ -175,7 +176,7 @@ public class BoardCreator : MonoBehaviour
                 }
 
                 // Set the tile at these coordinates to Floor.
-                tiles[xCoord][yCoord] = TileType.Floor;
+                tiles[xCoord + 2 ][yCoord + 2] = TileType.Floor;
             }
         }
     }
@@ -183,8 +184,6 @@ public class BoardCreator : MonoBehaviour
 
     void InstantiateTiles()
     {
-        bool wasPreviousAFloor = false;
-
         // Go through all the tiles in the jagged array...
         for (int i = 0; i < tiles.Length; i++)
         {
@@ -196,10 +195,6 @@ public class BoardCreator : MonoBehaviour
                     InstantiateFromArray(floorTiles, i, j);
                     checkForWallsAround(i,j);
                 }
-                else
-                {
-                    wasPreviousAFloor = false;
-                }
             }
         }
     }
@@ -208,41 +203,46 @@ public class BoardCreator : MonoBehaviour
         try {
             if (tiles[i - 1][j] == TileType.Void)
             {
+                tiles[i - 1][j] = TileType.Wall;
                 InstantiateFromArray(wallTiles, i - 1, j);
             }
             if (tiles[i - 1][j - 1] == TileType.Void)
             {
+                tiles[i - 1][j - 1] = TileType.Wall;
                 InstantiateFromArray(wallTiles, i - 1, j - 1);
             }
             if (tiles[i][j - 1] == TileType.Void)
             {
+                tiles[i][j - 1] = TileType.Wall;
                 InstantiateFromArray(wallTiles, i, j - 1);
             }
             if (tiles[i + 1][j] == TileType.Void)
             {
+                tiles[i + 1][j] = TileType.Wall;
                 InstantiateFromArray(wallTiles, i + 1, j);
             }
             if (tiles[i + 1][j + 1] == TileType.Void)
             {
+                tiles[i + 1][j + 1] = TileType.Wall;
                 InstantiateFromArray(wallTiles, i + 1, j + 1);
             }
             if (tiles[i][j + 1] == TileType.Void)
             {
+                tiles[i][j + 1] = TileType.Wall;
                 InstantiateFromArray(wallTiles, i, j + 1);
             }
             if (tiles[i - 1][j + 1] == TileType.Void)
             {
+                tiles[i - 1][j + 1] = TileType.Wall;
                 InstantiateFromArray(wallTiles, i - 1, j + 1);
             }
             if (tiles[i + 1][j - 1] == TileType.Void)
             {
+                tiles[i + 1][j - 1] = TileType.Wall;
                 InstantiateFromArray(wallTiles, i + 1, j - 1);
             }
         }
-        catch(IndexOutOfRangeException)
-        {
-            // is okay just do nothing.
-        }
+        catch (IndexOutOfRangeException) { }
     }
 
     void InstantiateOuterWalls()
@@ -271,10 +271,9 @@ public class BoardCreator : MonoBehaviour
         // While the value for Y is less than the end value...
         while (currentY <= endingY)
         {
-            // ... instantiate an outer wall tile at the x coordinate and the current y coordinate.
-            InstantiateFromArray(outerWallTiles, xCoord, currentY);
+                    InstantiateFromArray(wallTiles, xCoord, currentY);
 
-            currentY++;
+        currentY++;
         }
     }
 
@@ -287,9 +286,8 @@ public class BoardCreator : MonoBehaviour
         // While the value for X is less than the end value...
         while (currentX <= endingX)
         {
-            // ... instantiate an outer wall tile at the y coordinate and the current x coordinate.
-            InstantiateFromArray(outerWallTiles, currentX, yCoord);
 
+            InstantiateFromArray(outerWallTiles, currentX, yCoord);
             currentX++;
         }
     }
