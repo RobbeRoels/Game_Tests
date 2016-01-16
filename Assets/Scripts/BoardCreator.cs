@@ -7,7 +7,7 @@ public class BoardCreator : MonoBehaviour
     // The type of tile that will be laid in a specific position.
     public enum TileType
     {
-        Void, Wall, Floor
+        Void, Wall, Floor, Entrance, Exit
     }
 
 
@@ -20,7 +20,10 @@ public class BoardCreator : MonoBehaviour
     public GameObject[] floorTiles;                           // An array of floor tile prefabs.
     public GameObject[] wallTiles;                            // An array of wall tile prefabs.
     public GameObject[] outerWallTiles;                       // An array of outer wall tile prefabs.
-    public GameObject player;
+	public GameObject entrance;								  // The entrance object
+	public GameObject exit;									  // The exit object
+
+	public GameObject player;
 
     private TileType[][] tiles;                               // A jagged array of tile types representing the board, like a grid.
     private Room[] rooms;                                     // All the rooms that are created for this board.
@@ -121,6 +124,7 @@ public class BoardCreator : MonoBehaviour
 
     void SetTilesValuesForRooms()
     {
+		bool entranceSet = false, exitSet = false;
         // Go through all the rooms...
         for (int i = 0; i < rooms.Length; i++)
         {
@@ -135,7 +139,20 @@ public class BoardCreator : MonoBehaviour
                 for (int k = 0; k < currentRoom.roomHeight; k++)
                 {
                     int yCoord = currentRoom.yPos + k;
-                    tiles[xCoord + 2][yCoord + 2] = TileType.Floor;
+					if(i == 0 && j == currentRoom.roomWidth/2 && k == currentRoom.roomHeight/2 && !entranceSet){
+						tiles[xCoord + 2][yCoord + 2] = TileType.Entrance;
+						entranceSet = true;
+					}else{
+						if(i == rooms.Length-1 && j == currentRoom.roomWidth/2 && k == currentRoom.roomHeight/2 && !exitSet){
+							tiles[xCoord + 2][yCoord + 2] = TileType.Exit;
+							exitSet=true;
+						}else{
+							if(!(tiles[xCoord + 2][yCoord + 2] == TileType.Entrance || tiles[xCoord + 2][yCoord + 2] == TileType.Exit)){
+								tiles[xCoord + 2][yCoord + 2] = TileType.Floor;
+							}
+						}
+					}
+                    
                 }
             }
         }
@@ -195,6 +212,12 @@ public class BoardCreator : MonoBehaviour
                     InstantiateFromArray(floorTiles, i, j);
                     checkForWallsAround(i,j);
                 }
+				if(tiles[i][j] == TileType.Exit){
+					InstantiateFromSingleObject(exit, i, j);
+				}
+				if(tiles[i][j] == TileType.Entrance){
+					InstantiateFromSingleObject(entrance, i, j);
+				}
             }
         }
     }
@@ -307,4 +330,15 @@ public class BoardCreator : MonoBehaviour
         // Set the tile's parent to the board holder.
         tileInstance.transform.parent = boardHolder.transform;
     }
+
+
+	void InstantiateFromSingleObject(GameObject prefab, float xCoord, float yCoord)
+	{
+		// The position to be instantiated at is based on the coordinates.
+		Vector3 position = new Vector3(xCoord, yCoord, 0f);
+		// Create an instance of the prefab from the random index of the array.
+		GameObject tileInstance = Instantiate(prefab, position, Quaternion.identity) as GameObject;
+		// Set the tile's parent to the board holder.
+		tileInstance.transform.parent = boardHolder.transform;
+	}
 }
