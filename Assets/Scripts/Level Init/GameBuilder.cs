@@ -11,18 +11,24 @@ public class GameBuilder : MonoBehaviour {
     private GameObject levelImage;							//Image to block out level as levels are being set up, background for levelText.
 
 
+
+
     void Awake()
     {
         if (instance == null)
-
+        {
+            MovePlayer.OnExitReached += nextLevel;
             //if not, set instance to this
             instance = this;
+        }
 
         //If instance already exists and it's not this:
         else if (instance != this)
-
-            //Then destroy this. This enforces our singleton pattern, meaning there can only ever be one instance of a GameManager.
+        {
+            //Then destroy the already existing instance. This enforces our singleton pattern, meaning there can only ever be one instance of a GameManager.
             Destroy(gameObject);
+            MovePlayer.OnExitReached += nextLevel;
+        }
 
         //Sets this to not be destroyed when reloading scene
         DontDestroyOnLoad(gameObject);
@@ -58,10 +64,14 @@ public class GameBuilder : MonoBehaviour {
         levelImage.SetActive(false);
     }
 
+    void nextLevel() {
+        boardCreator.SetUpLevel();
+    }
+
 
     // Update is called once per frame
     void Update () {
-        if (Input.GetKeyDown(KeyCode.Space))
-            boardCreator.SetUpLevel();
+        if (Input.GetKeyDown(KeyCode.Escape))
+            Application.Quit();
     }
 }

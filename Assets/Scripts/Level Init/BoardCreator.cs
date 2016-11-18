@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Completed;
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -23,6 +24,7 @@ public class BoardCreator : MonoBehaviour
 	public GameObject entrance;								  // The entrance object
 	public GameObject exit;									  // The exit object
 
+    
 	public GameObject player;
 
     private TileType[][] tiles;                               // A jagged array of tile types representing the board, like a grid.
@@ -31,9 +33,16 @@ public class BoardCreator : MonoBehaviour
     private GameObject boardHolder;                           // GameObject that acts as a container for all other tiles.
 
 
+    void awake() {
+
+
+    }
+
     private void Start()
     {
-
+        player = Instantiate(player, new Vector3(0, 0, 0), Quaternion.identity) as GameObject;
+        player.transform.position = entrance.transform.position;
+        Camera.main.GetComponent<SmoothFollow>().target = player.transform;
     }
 
     public void SetUpLevel()
@@ -146,11 +155,10 @@ public class BoardCreator : MonoBehaviour
 						if(i == rooms.Length-1 && j == currentRoom.roomWidth/2 && k == currentRoom.roomHeight/2 && !exitSet){
 							tiles[xCoord + 2][yCoord + 2] = TileType.Exit;
 							exitSet=true;
-						}else{
-							if(!(tiles[xCoord + 2][yCoord + 2] == TileType.Entrance || tiles[xCoord + 2][yCoord + 2] == TileType.Exit)){
-								tiles[xCoord + 2][yCoord + 2] = TileType.Floor;
-							}
 						}
+					}
+					if(!(tiles[xCoord + 2][yCoord + 2] == TileType.Entrance || tiles[xCoord + 2][yCoord + 2] == TileType.Exit)){
+						tiles[xCoord + 2][yCoord + 2] = TileType.Floor;
 					}
                     
                 }
@@ -192,8 +200,10 @@ public class BoardCreator : MonoBehaviour
                         break;
                 }
 
-                // Set the tile at these coordinates to Floor.
-                tiles[xCoord + 2 ][yCoord + 2] = TileType.Floor;
+                // Set the tile at these coordinates to Floor but check for Enterance or Exit
+				if(!(tiles[xCoord + 2][yCoord + 2] == TileType.Entrance || tiles[xCoord + 2][yCoord + 2] == TileType.Exit)){
+					tiles[xCoord + 2][yCoord + 2] = TileType.Floor;
+				}
             }
         }
     }
@@ -216,7 +226,8 @@ public class BoardCreator : MonoBehaviour
 					InstantiateFromSingleObject(exit, i, j);
 				}
 				if(tiles[i][j] == TileType.Entrance){
-					InstantiateFromSingleObject(entrance, i, j);
+                    entrance = InstantiateFromSingleObject(entrance, i, j);
+                    player.transform.position = entrance.transform.position;
 				}
             }
         }
@@ -332,7 +343,7 @@ public class BoardCreator : MonoBehaviour
     }
 
 
-	void InstantiateFromSingleObject(GameObject prefab, float xCoord, float yCoord)
+    GameObject InstantiateFromSingleObject(GameObject prefab, float xCoord, float yCoord)
 	{
 		// The position to be instantiated at is based on the coordinates.
 		Vector3 position = new Vector3(xCoord, yCoord, 0f);
@@ -340,5 +351,7 @@ public class BoardCreator : MonoBehaviour
 		GameObject tileInstance = Instantiate(prefab, position, Quaternion.identity) as GameObject;
 		// Set the tile's parent to the board holder.
 		tileInstance.transform.parent = boardHolder.transform;
+        return tileInstance;
+
 	}
 }
