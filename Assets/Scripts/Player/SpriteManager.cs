@@ -15,6 +15,10 @@ public class SpriteManager : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
+        var value = Random.value;
+        
+
+
 		float mouseWheel = Input.GetAxis ("Mouse ScrollWheel");
         if(availableSprites.Length > 1) {
             if (mouseWheel < 0)

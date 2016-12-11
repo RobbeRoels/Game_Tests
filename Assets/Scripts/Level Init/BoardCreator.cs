@@ -47,7 +47,6 @@ public class BoardCreator : MonoBehaviour
 
     public void SetUpLevel()
     {
-        
         if(boardHolder != null)
         {
             //if the board holder already exists delete it and make a new one.
