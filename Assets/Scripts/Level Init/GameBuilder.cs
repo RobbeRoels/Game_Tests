@@ -1,23 +1,28 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using System.Collections.Generic;
+using System;
 
 public class GameBuilder : MonoBehaviour {
 
     public static GameBuilder instance = null;				//Static instance of GameManager which allows it to be accessed by any other script.
-    private BoardCreator boardCreator;						//Store a reference to our BoardCreator which will set up the level.
+    private BoardCreator boardCreator;                      //Store a reference to our BoardCreator which will set up the level.
     public float levelStartDelay = 1.3f;							//Delay between each Player turn.
     private Text levelText;                                 //Text to display current level number.
     private GameObject levelImage;							//Image to block out level as levels are being set up, background for levelText.
 
+    private Board _currentBoard;
+    private Board _lastBoard;
 
-
+    private Dictionary<int, Board> boardList = new Dictionary<int, Board>();
 
     void Awake()
     {
         if (instance == null)
         {
             MovePlayer.OnExitReached += nextLevel;
+            MovePlayer.OnEntranceReached += previousLevel;
             //if not, set instance to this
             instance = this;
         }
@@ -40,6 +45,18 @@ public class GameBuilder : MonoBehaviour {
         InitGame();
     }
 
+    private void previousLevel()
+    {
+        if (boardList.ContainsKey(_currentBoard._level - 1))
+        {
+            _lastBoard = _currentBoard;
+            _currentBoard = boardCreator.SetUpLevelFromPrevious(boardList[_currentBoard._level - 1], false);
+        }
+        else {
+            //?? Throw error.?
+        }     
+    }
+
 
     //Initializes the game for each level.
     void InitGame()
@@ -51,7 +68,30 @@ public class GameBuilder : MonoBehaviour {
         levelText = GameObject.Find("LevelText").GetComponent<Text>();
 
         //Create the dungeon.
-        boardCreator.SetUpLevel();
+        _currentBoard = boardCreator.SetUpLevel(-1);
+       /* GameObject overlayImage = GameObject.Find("OverlayImage");
+        switch (_currentBoard._dungeonFeeling) {
+            case Board.Feeling.FEAR:
+                overlayImage.GetComponent<Image>().color = new Color(1, 0, 0, 0.39f);
+                break;
+            case Board.Feeling.HOPE:
+                overlayImage.GetComponent<Image>().color = new Color(1, 1, 1, 0.39f);
+                break;
+            case Board.Feeling.LONELYNESS:
+                overlayImage.GetComponent<Image>().color = new Color(1, 1, 1, 0.39f);
+                break;
+            case Board.Feeling.SADNESS:
+                overlayImage.GetComponent<Image>().color = new Color(1, 0, 1, 0.39f);
+                break;
+            case Board.Feeling.SURPRISE:
+                overlayImage.GetComponent<Image>().color = new Color(0, 1, 1, 0.39f);
+                break;
+            case Board.Feeling.HAPPINESS:
+            default:
+                overlayImage.GetComponent<Image>().color = new Color(1, 1, 0, 0.39f);
+                break;
+        }*/
+        boardList.Add(_currentBoard._level, _currentBoard);
 
         //Wait for the delay and hide the image overlay
         Invoke("HideLevelImage", levelStartDelay);
@@ -65,7 +105,16 @@ public class GameBuilder : MonoBehaviour {
     }
 
     void nextLevel() {
-        boardCreator.SetUpLevel();
+        if (boardList.ContainsKey(_currentBoard._level + 1 ))
+        {
+            _lastBoard = _currentBoard;
+            _currentBoard = boardCreator.SetUpLevelFromPrevious(boardList[_currentBoard._level + 1], true);
+        }
+        else {
+            _lastBoard = _currentBoard;
+            _currentBoard = boardCreator.SetUpLevel(_lastBoard._level);
+            boardList.Add(_currentBoard._level, _currentBoard);
+        }
     }
 
 

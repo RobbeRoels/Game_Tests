@@ -1,7 +1,9 @@
 ﻿using Completed;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class BoardCreator : MonoBehaviour
 {
@@ -11,6 +13,7 @@ public class BoardCreator : MonoBehaviour
         Void, Wall, Floor, Entrance, Exit
     }
 
+    System.Random random = new System.Random();
 
     public int columns = 100;                                 // The number of columns on the board (how wide it will be).
     public int rows = 100;                                    // The number of rows on the board (how tall it will be).
@@ -21,16 +24,22 @@ public class BoardCreator : MonoBehaviour
     public GameObject[] floorTiles;                           // An array of floor tile prefabs.
     public GameObject[] wallTiles;                            // An array of wall tile prefabs.
     public GameObject[] outerWallTiles;                       // An array of outer wall tile prefabs.
-	public GameObject entrance;								  // The entrance object
-	public GameObject exit;									  // The exit object
+    public GameObject entrancePrefab;                           // The entrancePrefab object
+    public GameObject exitPrefab;                               // The exitPrefab object
+    public GameObject player;
 
-    
-	public GameObject player;
+    public GameObject[] otherObjects;                       // Other objects I want to instantiate after or during board building
+
+    public int spawnChance;                               //Chance of a random object spawning in a Tile
+
 
     private TileType[][] tiles;                               // A jagged array of tile types representing the board, like a grid.
     private Room[] rooms;                                     // All the rooms that are created for this board.
     private Corridor[] corridors;                             // All the corridors that connect the rooms.
     private GameObject boardHolder;                           // GameObject that acts as a container for all other tiles.
+
+    private GameObject entranceInstance;                       // The entrance Instance object
+    private GameObject exitInstance;                            // The exit Instance object
 
 
     void awake() {
@@ -41,16 +50,16 @@ public class BoardCreator : MonoBehaviour
     private void Start()
     {
         player = Instantiate(player, new Vector3(0, 0, 0), Quaternion.identity) as GameObject;
-        player.transform.position = entrance.transform.position;
+        player.transform.position = entranceInstance.transform.position;
         Camera.main.GetComponent<SmoothFollow>().target = player.transform;
     }
 
-    public void SetUpLevel()
+    public Board SetUpLevel(int previousLevel)
     {
-        if(boardHolder != null)
+        if (boardHolder != null)
         {
             //if the board holder already exists delete it and make a new one.
-            Destroy(boardHolder);
+            ResetBoard();
         }
         // Create the board holder.
         boardHolder = new GameObject("BoardHolder");
@@ -61,13 +70,45 @@ public class BoardCreator : MonoBehaviour
 
         SetTilesValuesForRooms();
 
+        SetTilesValuesForCorridors();
+
+        InstantiateTiles(true, true);
+        //InstantiateOuterWalls();
+
+        return new Board(tiles, rooms, corridors, previousLevel + 1);
+    }
+
+    public Board SetUpLevelFromPrevious(Board board, bool up)
+    {
+        if (boardHolder != null)
+        {
+            //if the board holder already exists delete it and make a new one.
+            ResetBoard();
+        }
+        // Create the board holder.
+        boardHolder = new GameObject("BoardHolder");
+
+        tiles = board._tiles;
+        rooms = board._rooms;
+        corridors = board._corridors;
+        entranceInstance.transform.parent = boardHolder.transform;
+        exitInstance.transform.parent = boardHolder.transform;
+
+        SetTilesValuesForRooms();
 
         SetTilesValuesForCorridors();
 
-        InstantiateTiles();
-        //InstantiateOuterWalls();
+        InstantiateTiles(false, up);
+
+        return board;
     }
 
+
+    private void ResetBoard() {
+        Destroy(boardHolder);
+        Destroy(entranceInstance);
+        Destroy(exitInstance);
+    }
 
     void SetupTilesArray()
     {
@@ -208,7 +249,7 @@ public class BoardCreator : MonoBehaviour
     }
 
 
-    void InstantiateTiles()
+    void InstantiateTiles(bool first,bool entrance)
     {
         // Go through all the tiles in the jagged array...
         for (int i = 0; i < tiles.Length; i++)
@@ -219,14 +260,39 @@ public class BoardCreator : MonoBehaviour
                 if (tiles[i][j] == TileType.Floor)
                 {
                     InstantiateFromArray(floorTiles, i, j);
-                    checkForWallsAround(i,j);
+                    //int rest = % 3;
+                    int randomInt = random.Next(0,1000);
+                    if (randomInt < spawnChance)
+                    {
+                        InstantiateFromArray(otherObjects, i, j);
+                    }
+                    if (first)
+                    {
+                        checkForWallsAround(i, j);
+                    }
+                }
+                else {
+                    if (tiles[i][j] == TileType.Wall)
+                    {
+                        InstantiateFromArray(wallTiles, i, j);
+                    }
                 }
 				if(tiles[i][j] == TileType.Exit){
-					InstantiateFromSingleObject(exit, i, j);
-				}
+                    exitInstance = InstantiateFromSingleObject(exitPrefab, i, j);
+                    if (!entrance)
+                    {
+                        player.transform.position = new Vector2(i + 1, j + 1);
+                    }
+                }
 				if(tiles[i][j] == TileType.Entrance){
-                    entrance = InstantiateFromSingleObject(entrance, i, j);
-                    player.transform.position = entrance.transform.position;
+                    entranceInstance = InstantiateFromSingleObject(entrancePrefab, i, j);
+                    if (entrance)
+                    {
+                        int enId = entranceInstance.GetInstanceID();
+                        player.transform.position = new Vector2(i + 1, j + 1);
+                    }
+  
+                                  
 				}
             }
         }
@@ -304,9 +370,8 @@ public class BoardCreator : MonoBehaviour
         // While the value for Y is less than the end value...
         while (currentY <= endingY)
         {
-                    InstantiateFromArray(wallTiles, xCoord, currentY);
-
-        currentY++;
+            InstantiateFromArray(wallTiles, xCoord, currentY);
+            currentY++;
         }
     }
 
@@ -350,7 +415,10 @@ public class BoardCreator : MonoBehaviour
 		GameObject tileInstance = Instantiate(prefab, position, Quaternion.identity) as GameObject;
 		// Set the tile's parent to the board holder.
 		tileInstance.transform.parent = boardHolder.transform;
+
         return tileInstance;
 
 	}
+
+
 }
